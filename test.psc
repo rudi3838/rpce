@@ -3,11 +3,11 @@ Der folgende Algorithmus schreibt die Elemente von f1 f2- Mal in f3.
 Über dem Start des Algorithmus können beliebig viele Zeilen geschrieben werden.
 
 algorithm Extract ( \i f1 \i  f2 \i l \o f3 \i l3)
-param char f1[1…l];
-             int f2[1…l];
-             int l;
-             int f3[1…l3];
+param int l;
+             char f1[1...l];
+             int f2[1...l];
              int l3;
+             int f3[1...l3];
 local int counter = 0;
          int curpos = 1;
          int counter2 = 0;

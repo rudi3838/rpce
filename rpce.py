@@ -10,11 +10,16 @@ import pandas as pd
 def get_file_contents(filename = "test.psc"):
     filelines = []
     error = 0
-    with open(filename) as file_in:
+    with open(filename,'r', encoding="utf-8") as file_in:
         for line in file_in:
             filelines.append(line)
             
     return error, filelines
+
+def get_value_of_params(nameofparam = "'Ein Fehler fand statt!'"):
+    print("Geben Sie einen Wert für den Parameter " + nameofparam + " ein: ")
+    x = input()
+    return x
     
 
 def check_code(filelines):
@@ -27,16 +32,18 @@ def execute_code(filelines):
     length_filelines = len(filelines)
     int_current_line = 0
     string_current_line = ""
+    int_current_state = 0 # 0 = before begin of algorithm; 1 = params; 2 = local; 3 = Code
     
     # Dataframe which holds variables
     variables = pd.DataFrame()
+    dataframe_current_index = 0 # my own indexes
     
     
     # get the algorithm interface
     while int_current_line < length_filelines:
-        string_current_line = filelines[int_current_line]
+        string_current_line = filelines[int_current_line].strip()
         
-        if "algorithm" == string_current_line[0:9]:
+        if int_current_state == 0 and "algorithm" == string_current_line[0:9]:
             int_position = 0 # 0 = before bracket; 1 = in brackets; 2 = after brackets
             i = 0
             #information about one variable
@@ -55,9 +62,10 @@ def execute_code(filelines):
                     var_name = string_current_line[i+2:].split(' ')
                     for x in range(0,len(var_name)):
                         if var_name[x] != '':
-                            var_name = var_name[x]
+                            var_name = var_name[x].rstrip(')')
                             break
-                    new_variable = pd.Series({'name': var_name, 'direction': var_direction, 'value': "0", 'datatype': "int"})
+                    new_variable = pd.Series({'myindex': dataframe_current_index, 'name': var_name, 'direction': var_direction, 'value': "0", 'datatype': "int"})
+                    dataframe_current_index = dataframe_current_index + 1
                     variables = variables.append(new_variable, ignore_index=True)
                 elif int_position == 2 and letter == ':':
                     string_current_line = string_current_line[i:].split(' ')
@@ -72,11 +80,50 @@ def execute_code(filelines):
                             else:
                                 var_datatype = string_current_line[x]
                                 temp_already_datatype = True
-                    new_variable = pd.Series({'name': var_name, 'direction': 'o', 'value': "0", 'datatype': var_datatype})
+                    new_variable = pd.Series({'myindex': dataframe_current_index, 'name': var_name, 'direction': 'o', 'value': "0", 'datatype': var_datatype})
+                    dataframe_current_index = dataframe_current_index + 1
                     variables = variables.append(new_variable, ignore_index=True)
                     
                 i = i + 1
+            int_current_state = 1 # now the params start
             
+        elif int_current_state == 1:
+            if ("local" in string_current_line) or ("Local" in string_current_line):
+                int_current_line = int_current_line - 1
+                int_current_state = 2
+                continue
+            if string_current_line == "": # Wenn nichts (außer Leerzeichen, die oben entfernt werden) in der Zeile steht
+                continue
+            
+            string_current_line = string_current_line.replace("param", '')
+            string_current_line = string_current_line.replace("Param", '')
+            string_current_line = string_current_line.strip(' ')
+            
+            var_datatype = string_current_line.split(' ')[0]
+            string_current_line = string_current_line.replace(var_datatype, '').strip(' ')
+            if '[' in string_current_line: # if it is an array
+                var_name = string_current_line.split('[')[0].strip(' ')
+                array_min = string_current_line.split('[')[1].replace(']','').replace(';','').strip(' ')[0:2].strip('.')
+                array_max = string_current_line.split('[')[1].replace(']','').replace(';','').strip(' ')[-2:].strip('.')
+                if not isinstance(array_max, int):
+                    temp = variables.query("name == @array_max").iloc[0].myindex
+                    array_max = variables.at[temp,"value"]
+                temp = variables.query("name == @var_name").iloc[0].myindex
+                var_direction = variables.at[temp,"direction"]
+                # variables.drop(labels=var_name,inplace=True)
+                var_datatype = var_datatype + "_array"
+                for i in range(int(array_min), int(array_max + 1)):
+                    array_pos_var_name = (var_name + '[' + str(i) + ']')
+                    var_value = get_value_of_params(array_pos_var_name)
+                    new_variable = pd.Series({'myindex': dataframe_current_index, 'name': array_pos_var_name, 'direction': var_direction, 'value': var_value, 'datatype': var_datatype})
+                    dataframe_current_index = dataframe_current_index + 1
+                    variables = variables.append(new_variable, ignore_index=True)
+            else:
+                var_name = string_current_line.replace(';', '')
+                var_value = get_value_of_params(var_name)
+                temp = variables.query("name == @var_name").iloc[0].myindex
+                variables.at[temp,"datatype"] = var_datatype
+                variables.at[temp,"value"] = var_value
             
         int_current_line = int_current_line + 1
     
