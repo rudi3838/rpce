@@ -89,7 +89,6 @@ def execute_code(filelines):
             
         elif int_current_state == 1:
             if ("local" in string_current_line) or ("Local" in string_current_line):
-                int_current_line = int_current_line - 1
                 int_current_state = 2
                 continue
             if string_current_line == "": # Wenn nichts (außer Leerzeichen, die oben entfernt werden) in der Zeile steht
@@ -112,7 +111,7 @@ def execute_code(filelines):
                 var_direction = variables.at[temp,"direction"]
                 # variables.drop(labels=var_name,inplace=True)
                 var_datatype = var_datatype + "_array"
-                for i in range(int(array_min), int(array_max + 1)):
+                for i in range(int(array_min), int(array_max) + 1):
                     array_pos_var_name = (var_name + '[' + str(i) + ']')
                     var_value = get_value_of_params(array_pos_var_name)
                     new_variable = pd.Series({'myindex': dataframe_current_index, 'name': array_pos_var_name, 'direction': var_direction, 'value': var_value, 'datatype': var_datatype})
@@ -135,8 +134,8 @@ def execute_code(filelines):
             string_current_line = string_current_line.strip(' ')
             
             var_datatype = string_current_line.split(' ')[0]
-            string_current_line = string_current_line.replace(var_datatype, '').split('=')[0].strip(' ')
             var_value = string_current_line.replace(var_datatype, '').split('=')[1].strip(';').strip(' ')
+            string_current_line = string_current_line.replace(var_datatype, '').split('=')[0].strip(' ')
             if '[' in string_current_line: # if it is an array
                 var_name = string_current_line.split('[')[0].strip(' ')
                 array_min = string_current_line.split('[')[1].replace(']','').replace(';','').strip(' ')[0:2].strip('.')
@@ -145,7 +144,7 @@ def execute_code(filelines):
                     temp = variables.query("name == @array_max").iloc[0].myindex
                     array_max = variables.at[temp,"value"]
                 var_datatype = var_datatype + "_array"
-                for i in range(int(array_min), int(array_max + 1)):
+                for i in range(int(array_min), int(array_max) + 1):
                     array_pos_var_name = (var_name + '[' + str(i) + ']')
                     new_variable = pd.Series({'myindex': dataframe_current_index, 'name': array_pos_var_name, 'direction': "local", 'value': var_value, 'datatype': var_datatype})
                     dataframe_current_index = dataframe_current_index + 1
