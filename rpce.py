@@ -124,13 +124,75 @@ def execute_code(filelines):
                 temp = variables.query("name == @var_name").iloc[0].myindex
                 variables.at[temp,"datatype"] = var_datatype
                 variables.at[temp,"value"] = var_value
+        
+        elif int_current_state == 2:
+            if string_current_line == "": # Wenn nichts (außer Leerzeichen, die oben entfernt werden) in der Zeile steht
+                int_current_state = 3
+                break
+            
+            string_current_line = string_current_line.replace("local", '')
+            string_current_line = string_current_line.replace("Local", '')
+            string_current_line = string_current_line.strip(' ')
+            
+            var_datatype = string_current_line.split(' ')[0]
+            string_current_line = string_current_line.replace(var_datatype, '').split('=')[0].strip(' ')
+            var_value = string_current_line.replace(var_datatype, '').split('=')[1].strip(';').strip(' ')
+            if '[' in string_current_line: # if it is an array
+                var_name = string_current_line.split('[')[0].strip(' ')
+                array_min = string_current_line.split('[')[1].replace(']','').replace(';','').strip(' ')[0:2].strip('.')
+                array_max = string_current_line.split('[')[1].replace(']','').replace(';','').strip(' ')[-2:].strip('.')
+                if not isinstance(array_max, int):
+                    temp = variables.query("name == @array_max").iloc[0].myindex
+                    array_max = variables.at[temp,"value"]
+                var_datatype = var_datatype + "_array"
+                for i in range(int(array_min), int(array_max + 1)):
+                    array_pos_var_name = (var_name + '[' + str(i) + ']')
+                    new_variable = pd.Series({'myindex': dataframe_current_index, 'name': array_pos_var_name, 'direction': "local", 'value': var_value, 'datatype': var_datatype})
+                    dataframe_current_index = dataframe_current_index + 1
+                    variables = variables.append(new_variable, ignore_index=True)
+            else:
+                var_name = string_current_line.replace(';', '')
+                new_variable = pd.Series({'myindex': dataframe_current_index, 'name': var_name, 'direction': "local", 'value': var_value, 'datatype': var_datatype})
+                dataframe_current_index = dataframe_current_index + 1
+                variables = variables.append(new_variable, ignore_index=True)
+            
             
         int_current_line = int_current_line + 1
     
     int_current_line = int_current_line + 1
     
+    # actual code execution
+    int_stadium = 0 # 0 = execute every line; 1 = jump to end of if; 2 = jump to end of while
+    
+    
     while int_current_line < length_filelines:
-        pass
+        string_current_line = filelines[int_current_line].strip()
+        if string_current_line == '':
+            continue
+        
+        if "if" in string_current_line:
+            pass
+        elif "elseif" in string_current_line or "else if" in string_current_line:
+            pass
+        elif "else" in string_current_line:
+            pass
+        elif "while" in string_current_line:
+            pass
+        elif "repeat" in string_current_line:
+            pass
+        elif "do" in string_current_line:
+            pass
+        elif "for" in string_current_line:
+            pass
+        elif "return" in string_current_line:
+            pass
+        elif "end" in string_current_line:
+            pass
+        elif '=' in string_current_line:
+            pass
+        else:
+            # Funktionsaufruf etc.
+            pass
 
 
 """
