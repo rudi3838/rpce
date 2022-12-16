@@ -18,3 +18,4 @@ Nach den lokalen Variablen muss eine Zeile freigelassen werden.
 
 - Bei lokalen Arrays funktioniert die Deklaration nur mit "= 0" bzw. "= 'Wert'";
 - Keine Unterstützung von case-statements
+- kein do while, kein repeat until

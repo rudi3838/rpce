@@ -27,6 +27,11 @@ def check_code(filelines):
     pass
 
 
+def boolean_statement(statement)-> bool:
+    statement = statement.strip()
+    return eval(statement)
+
+
 # This function executes the pseudocode
 def execute_code(filelines):
     length_filelines = len(filelines)
@@ -161,37 +166,86 @@ def execute_code(filelines):
     int_current_line = int_current_line + 1
     
     # actual code execution
-    int_stadium = 0 # 0 = execute every line; 1 = jump to end of if; 2 = jump to end of while
+    int_states = [[0,0]] # 0 = execute every line; 1 = if; 2 = while; 4 = for
+    # first position is state; secound is position
     
     
     while int_current_line < length_filelines:
         string_current_line = filelines[int_current_line].strip()
+        int_current_state = int_states[len(int_states)-1]
+        
+        
         if string_current_line == '':
+            int_current_line = int_current_line + 1
             continue
         
-        if "if" in string_current_line:
-            pass
-        elif "elseif" in string_current_line or "else if" in string_current_line:
+        if "elseif" in string_current_line or "else if" in string_current_line:
             pass
         elif "else" in string_current_line:
+           pass
+        elif "if" in string_current_line:
+            int_states.append([1,int_current_line])
             pass
         elif "while" in string_current_line:
-            pass
-        elif "repeat" in string_current_line:
-            pass
-        elif "do" in string_current_line:
-            pass
+            string_current_line = string_current_line.strip("while").strip("do")
+            
+            if not boolean_statement(string_current_line):
+                x = 1
+                while x > 0:
+                    int_current_line = int_current_line + 1
+                    tempstr = filelines[int_current_line].strip()
+                    if "for" in tempstr or "if" in tempstr or "while" in tempstr:
+                        x = x + 1
+                    if "end" in tempstr:
+                        x = x - 1
+            else:
+                int_states.append([2,int_current_line])
+            
+        # elif "repeat" in string_current_line:
+        #    pass
+        # elif "do" in string_current_line:
+        #    pass
         elif "for" in string_current_line:
-            pass
-        elif "return" in string_current_line:
-            pass
+            variable =
+            up =
+            by =
+            if int_current_state[1] != int_current_line:    # wenn diese for das erste Mal aufgerufen wird
+                int_states.append([4,int_current_line])
+                # = zuweisen
+            else:
+                # hinaufzählen
+                pass
+            
+            wert_variable =
+            
+            if not wert_variable <= up:
+                x = 1
+                while x > 0:
+                    int_current_line = int_current_line + 1
+                    tempstr = filelines[int_current_line].strip()
+                    if "for" in tempstr or "if" in tempstr or "while" in tempstr:
+                        x = x + 1
+                    if "end" in tempstr:
+                        x = x - 1
+                int_states.pop()
+        #elif "return" in string_current_line:
+        #    pass
         elif "end" in string_current_line:
-            pass
+            if int_current_state[0] == 2:
+                int_current_line = int_current_state[1]
+                int_states.pop()
+                continue
+            if int_current_state[0] == 4:
+                int_current_line = int_current_state[1]
+                continue
+                
         elif '=' in string_current_line:
             pass
         else:
             # Funktionsaufruf etc.
             pass
+        
+        int_current_line = int_current_line + 1
 
 
 """
